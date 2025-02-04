@@ -1,3 +1,4 @@
+#define PRIVATE_RGBASE
 #include "core/rgbase.h"
 #include <cstdio>
 #include <cstdlib>

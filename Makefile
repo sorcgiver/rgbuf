@@ -7,15 +7,15 @@ RGCORE_PATH = ./src/core
 EXAMPLE_PATH = ./examples
 TEST_PATH = ./tests
 
-CFLAGS = -I$(RGPATH)
-CXXFLAGS = -I$(RGPATH)
+CFLAGS = -I$(RGPATH) -Wall -Wextra
+CXXFLAGS = -I$(RGPATH) -Wall -Wextra
 
 all: example test
 
-example: $(EXAMPLE_PATH)/example.o $(RGCORE_PATH)/rgbase.o
+example: $(EXAMPLE_PATH)/example.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o
 	$(CXX) -o $@ $^
 
-test: $(TEST_PATH)/test.o $(RGCORE_PATH)/rgbase.o
+test: $(TEST_PATH)/test.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o
 	$(CXX) -o $@ $^
 
 $(TEST_PATH)/test.o: $(TEST_PATH)/test.cpp
@@ -25,6 +25,9 @@ $(EXAMPLE_PATH)/example.o: $(EXAMPLE_PATH)/example.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(RGCORE_PATH)/rgbase.o: $(RGCORE_PATH)/rgbase.c $(RGCORE_PATH)/rgbase.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(RGPATH)/rgbuf.o: $(RGPATH)/rgbuf.c $(RGPATH)/rgbuf.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

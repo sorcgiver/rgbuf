@@ -1,5 +1,6 @@
-#include "rgbase.h"
+#define PRIVATE_RGBASE
 #include <string.h>
+#include "rgbase.h"
 
 void rgbase_init(struct rgbase* fd, void* buf, rgsize_t size)
 {

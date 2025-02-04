@@ -1,56 +1,27 @@
 #ifndef RGBUF_H
 #define RGBUF_H
 
-#include <cstdint>
+#include "core/rgbase.h"
 
-typedef uint32_t _rgsize_t;
-typedef int _rgindex_t;
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-/*! \class rgbuf
- *  \brief Brief class description
- *
- *  Detailed description
- */
-/*class rgbuf*/
-/*{*/
-/*public:*/
-/*	rgbuf();*/
-/*	virtual ~rgbuf();*/
-/*};*/
+typedef struct rgbuf rgbuf_t;
 
-template <_rgsize_t bufferSize>
-class _rgbufBase {
-    protected:
-	uint8_t buffer[bufferSize];
+void rgbuf_init(rgbuf_t* fd, void* buf, rgsize_t size);
+rgsize_t rgbuf_write(rgbuf_t* fd, const void* src, rgsize_t n);
+rgsize_t rgbuf_ovrwrite(rgbuf_t* fd, const void* src, rgsize_t n);
+rgsize_t rgbuf_read(rgbuf_t* fd, void* dst, rgsize_t n);
 
-	_rgsize_t copy(_rgindex_t index, const void* src, _rgsize_t n);
-	_rgsize_t copy(void* dst, _rgindex_t index, _rgsize_t n);
-	void indexSetCorrect(_rgindex_t& index);
+#ifdef PRIVATE_RGBUF
+struct rgbuf {
+	rgbase_t base;
+	rgindex_t idx_start;
+	rgsize_t szfill;
 };
-
-template <_rgsize_t sz>
-_rgsize_t _rgbufBase<sz>::copy(_rgindex_t index, const void* src, _rgsize_t n)
-{
-	return 0;
+#endif /* PRIVATE_RGBUF */
+#ifdef __cplusplus
 }
-
-template <_rgsize_t sz>
-_rgsize_t _rgbufBase<sz>::copy(void* dst, _rgindex_t index, _rgsize_t n)
-{
-	return 0;
-}
-
-template <_rgsize_t sz>
-void _rgbufBase<sz>::indexSetCorrect(_rgindex_t& index)
-{
-	if (index >= 0 && index < sz)
-		return;
-	if (index < 0) {
-		index *= (-1);
-		index %= sz;
-		index = sz - index;
-	}
-	index %= sz;
-}
-
+#endif /* __cplusplus */
 #endif /* ifndef RGBUF_H */
