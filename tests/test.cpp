@@ -1,5 +1,7 @@
+#define PRIVATE_RGBUF
 #define PRIVATE_RGBASE
 #include "core/rgbase.h"
+#include "rgbuf.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -195,6 +197,64 @@ void test_read()
 	complete();
 }
 
+void test_rgbufwrite()
+{
+	rgsize_t size;
+	uint8_t buffer[5];
+	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	rgbuf_t rb;
+	rgbuf_init(&rb, buffer, sizeof(buffer));
+
+	rgbuf_clear(&rb);
+	memset(buffer, 0, sizeof(buffer));
+	size = rgbuf_write(&rb, checkbuf, 3);
+	errval("write", size, 3);
+	for(int i = 0; i < 3; i++) {
+		if(buffer[i] == checkbuf[i])
+			continue;
+		cout << "FAIL" << endl;
+		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i], checkbuf[i]);
+		abort();
+	}
+
+	memset(buffer, 0, sizeof(buffer));
+	size = rgbuf_write(&rb, checkbuf, 10);
+	errval("write", size, 2);
+	for(int i = 0; i < 2; i++) {
+		if(buffer[i+3] == checkbuf[i])
+			continue;
+		cout << "FAIL" << endl;
+		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i+3], checkbuf[i]);
+		abort();
+	}
+
+	rgbuf_clear(&rb);
+	memset(buffer, 0, sizeof(buffer));
+	size = rgbuf_write(&rb, checkbuf, 5);
+	errval("write", size, 5);
+	for(int i = 0; i < 5; i++) {
+		if(buffer[i] == checkbuf[i])
+			continue;
+		cout << "FAIL" << endl;
+		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i], checkbuf[i]);
+		abort();
+	}
+
+	complete();
+}
+
+void test_rgbufskip()
+{
+	rgsize_t size;
+	uint8_t buffer[5];
+	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	rgbuf_t rb;
+	rgbuf_init(&rb, buffer, sizeof(buffer));
+
+	rgbuf_write(&rb, checkbuf, 10);
+	rgbuf_skip(&rb, 2);
+}
+
 #define test_info(str) \
 	cout << "CHECK: " << setw(50) << left << str;
 
@@ -212,5 +272,7 @@ int main(int argc, char* argv[])
 	test_pread();
 	test_info("check read correct");
 	test_read();
+	test_info("check rgbuf_t write");
+	test_rgbufwrite();
 	return 0;
 }

@@ -10,9 +10,12 @@ extern "C" {
 typedef struct rgbuf rgbuf_t;
 
 void rgbuf_init(rgbuf_t* fd, void* buf, rgsize_t size);
+void rgbuf_clear(rgbuf_t* fd);
 rgsize_t rgbuf_write(rgbuf_t* fd, const void* src, rgsize_t n);
-rgsize_t rgbuf_ovrwrite(rgbuf_t* fd, const void* src, rgsize_t n);
+rgsize_t rgbuf_overwrite(rgbuf_t* fd, const void* src, rgsize_t n);
 rgsize_t rgbuf_read(rgbuf_t* fd, void* dst, rgsize_t n);
+rgsize_t rgbuf_peek(const rgbuf_t* fd, rgsize_t skip_n, void* dst, rgsize_t n);
+rgsize_t rgbuf_skip(rgbuf_t* fd, rgsize_t n);
 
 #ifdef PRIVATE_RGBUF
 struct rgbuf {
