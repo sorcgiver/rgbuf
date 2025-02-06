@@ -209,8 +209,8 @@ void test_rgbufwrite()
 	memset(buffer, 0, sizeof(buffer));
 	size = rgbuf_write(&rb, checkbuf, 3);
 	errval("write", size, 3);
-	for(int i = 0; i < 3; i++) {
-		if(buffer[i] == checkbuf[i])
+	for (int i = 0; i < 3; i++) {
+		if (buffer[i] == checkbuf[i])
 			continue;
 		cout << "FAIL" << endl;
 		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i], checkbuf[i]);
@@ -220,11 +220,11 @@ void test_rgbufwrite()
 	memset(buffer, 0, sizeof(buffer));
 	size = rgbuf_write(&rb, checkbuf, 10);
 	errval("write", size, 2);
-	for(int i = 0; i < 2; i++) {
-		if(buffer[i+3] == checkbuf[i])
+	for (int i = 0; i < 2; i++) {
+		if (buffer[i + 3] == checkbuf[i])
 			continue;
 		cout << "FAIL" << endl;
-		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i+3], checkbuf[i]);
+		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i + 3], checkbuf[i]);
 		abort();
 	}
 
@@ -232,8 +232,8 @@ void test_rgbufwrite()
 	memset(buffer, 0, sizeof(buffer));
 	size = rgbuf_write(&rb, checkbuf, 5);
 	errval("write", size, 5);
-	for(int i = 0; i < 5; i++) {
-		if(buffer[i] == checkbuf[i])
+	for (int i = 0; i < 5; i++) {
+		if (buffer[i] == checkbuf[i])
 			continue;
 		cout << "FAIL" << endl;
 		printf("not correct writen byte <%d>: 0x%02X != 0x%02X\n", i, buffer[i], checkbuf[i]);
@@ -243,16 +243,107 @@ void test_rgbufwrite()
 	complete();
 }
 
-void test_rgbufskip()
+#define errfor(str, arr, arr_check, size)                                                        \
+	for (int i = 0; i < size; i++) {                                                         \
+		if (arr[i] == arr_check[i])                                                      \
+			continue;                                                                \
+		cout << "FAIL" << endl;                                                          \
+		cout << __FILE__ << ":" << __LINE__ << ": FAIL " << str << std::endl;            \
+		cout << str << endl;                                                             \
+		cout << "not correct " << i << ": " << arr[i] << " != " << arr_check[i] << endl; \
+		abort();                                                                         \
+	}
+
+/*void check_correct_fun(void* arr, void* correct, rgsize_t n)*/
+/*{*/
+/*	uint8_t* arr8 = (uint8_t*)arr;*/
+/*	uint8_t* correct8 = (uint8_t*)correct;*/
+/*	for (rgsize_t i = 0; i < n; i++) {*/
+/*		if (arr8[i] == correct8[i])*/
+/*			continue;*/
+/*		cout << "FAIL" << endl;*/
+/*		cout << __FILE__ << ":" << __LINE__ << ": FAIL " << "error byte correct" << std::endl;*/
+/*		cout << "test: " << i + 1 << "/" << n << endl;*/
+/*		cout << (int)buffer[i] << " != " << (int)checkbuf[i] << endl;*/
+/*		abort();*/
+/*	}*/
+/*}*/
+
+#define check_correct(arr, correct, n)                                                                 \
+	for (rgsize_t i = 0; i < n; i++) {                                                             \
+		if (arr[i] == correct[i])                                                            \
+			continue;                                                                      \
+		cout << "FAIL" << endl;                                                                \
+		cout << __FILE__ << ":" << __LINE__ << ": FAIL " << "error byte correct" << std::endl; \
+		cout << "test: " << i + 1 << "/" << n << endl;                                         \
+		cout << (uint32_t)(arr[i]) << " != " << (uint32_t)(correct[i]) << endl;                          \
+		abort();                                                                               \
+	}
+
+void test_rgbufwriteskip()
 {
 	rgsize_t size;
 	uint8_t buffer[5];
-	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 	rgbuf_t rb;
 	rgbuf_init(&rb, buffer, sizeof(buffer));
 
 	rgbuf_write(&rb, checkbuf, 10);
 	rgbuf_skip(&rb, 2);
+	rgbuf_write(&rb, checkbuf+7, 10);
+	check_correct(buffer, (checkbuf+7), 2);	
+	check_correct((buffer+2), (checkbuf+2), 3);	
+
+	memset(buffer, 0, sizeof(buffer));
+	rgbuf_clear(&rb);
+	rgbuf_write(&rb, checkbuf, 3);
+	rgbuf_skip(&rb, 2);
+	rgbuf_write(&rb, checkbuf, 10);
+	check_correct(buffer, (checkbuf+2), 2);
+	check_correct((buffer+2),(checkbuf+2), 1);
+	check_correct((buffer+3), checkbuf, 2);
+
+	memset(buffer, 0, sizeof(buffer));
+	rgbuf_clear(&rb);
+	rgbuf_write(&rb, checkbuf, 10);
+	rgbuf_skip(&rb, 10);
+	rgbuf_write(&rb, checkbuf, 10);
+	check_correct(buffer, checkbuf, 5);
+	rgbuf_skip(&rb, 4);
+	rgbuf_write(&rb, checkbuf, 10);
+	check_correct(buffer, checkbuf, 4);
+	check_correct((buffer+4), (checkbuf+4), 1);
+	rgbuf_skip(&rb, 10);
+	rgbuf_write(&rb, checkbuf, 10);
+	check_correct(buffer, (checkbuf+1), 4);
+	check_correct((buffer+4), checkbuf, 1);
+
+	complete();
+}
+
+void test_rgbufread()
+{
+	rgsize_t size;
+	uint8_t buffer[5];
+	uint8_t recvbuf[10];
+	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	rgbuf_t rb;
+	rgbuf_init(&rb, buffer, sizeof(buffer));
+
+	size = rgbuf_read(&rb, recvbuf, 5);
+	errval("not correct read size", size, 0);
+
+	rgbuf_write(&rb, checkbuf, 2);
+	size = rgbuf_read(&rb, recvbuf, 5);
+	errval("not correct read size", size, 2);
+	check_correct(recvbuf, checkbuf, 2);
+
+	rgbuf_write(&rb, checkbuf, 10);
+	size = rgbuf_read(&rb, recvbuf, 10);
+	errval("not correct read size", size, 5);
+	check_correct(recvbuf, checkbuf, 5);
+
+	complete();
 }
 
 #define test_info(str) \
@@ -274,5 +365,9 @@ int main(int argc, char* argv[])
 	test_read();
 	test_info("check rgbuf_t write");
 	test_rgbufwrite();
+	test_info("check rgbuf_t write + skip");
+	test_rgbufwriteskip();
+	test_info("check rgbuf_t read");
+	test_rgbufread();
 	return 0;
 }
