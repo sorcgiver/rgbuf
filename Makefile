@@ -15,7 +15,7 @@ all: example test
 example: $(EXAMPLE_PATH)/example.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o
 	$(CXX) -o $@ $^
 
-test: $(TEST_PATH)/test.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o
+test: $(TEST_PATH)/test.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o $(RGPATH)/rgpbuf.o
 	$(CXX) -o $@ $^
 
 $(TEST_PATH)/test.o: $(TEST_PATH)/test.cpp
@@ -28,6 +28,9 @@ $(RGCORE_PATH)/rgbase.o: $(RGCORE_PATH)/rgbase.c $(RGCORE_PATH)/rgbase.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(RGPATH)/rgbuf.o: $(RGPATH)/rgbuf.c $(RGPATH)/rgbuf.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(RGPATH)/rgpbuf.o: $(RGPATH)/rgpbuf.c $(RGPATH)/rgpbuf.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

@@ -271,12 +271,12 @@ void test_rgbufwrite()
 
 #define check_correct(arr, correct, n)                                                                 \
 	for (rgsize_t i = 0; i < n; i++) {                                                             \
-		if (arr[i] == correct[i])                                                            \
+		if (arr[i] == correct[i])                                                              \
 			continue;                                                                      \
 		cout << "FAIL" << endl;                                                                \
 		cout << __FILE__ << ":" << __LINE__ << ": FAIL " << "error byte correct" << std::endl; \
 		cout << "test: " << i + 1 << "/" << n << endl;                                         \
-		cout << (uint32_t)(arr[i]) << " != " << (uint32_t)(correct[i]) << endl;                          \
+		cout << (uint32_t)(arr[i]) << " != " << (uint32_t)(correct[i]) << endl;                \
 		abort();                                                                               \
 	}
 
@@ -290,18 +290,18 @@ void test_rgbufwriteskip()
 
 	rgbuf_write(&rb, checkbuf, 10);
 	rgbuf_skip(&rb, 2);
-	rgbuf_write(&rb, checkbuf+7, 10);
-	check_correct(buffer, (checkbuf+7), 2);	
-	check_correct((buffer+2), (checkbuf+2), 3);	
+	rgbuf_write(&rb, checkbuf + 7, 10);
+	check_correct(buffer, (checkbuf + 7), 2);
+	check_correct((buffer + 2), (checkbuf + 2), 3);
 
 	memset(buffer, 0, sizeof(buffer));
 	rgbuf_clear(&rb);
 	rgbuf_write(&rb, checkbuf, 3);
 	rgbuf_skip(&rb, 2);
 	rgbuf_write(&rb, checkbuf, 10);
-	check_correct(buffer, (checkbuf+2), 2);
-	check_correct((buffer+2),(checkbuf+2), 1);
-	check_correct((buffer+3), checkbuf, 2);
+	check_correct(buffer, (checkbuf + 2), 2);
+	check_correct((buffer + 2), (checkbuf + 2), 1);
+	check_correct((buffer + 3), checkbuf, 2);
 
 	memset(buffer, 0, sizeof(buffer));
 	rgbuf_clear(&rb);
@@ -312,11 +312,11 @@ void test_rgbufwriteskip()
 	rgbuf_skip(&rb, 4);
 	rgbuf_write(&rb, checkbuf, 10);
 	check_correct(buffer, checkbuf, 4);
-	check_correct((buffer+4), (checkbuf+4), 1);
+	check_correct((buffer + 4), (checkbuf + 4), 1);
 	rgbuf_skip(&rb, 10);
 	rgbuf_write(&rb, checkbuf, 10);
-	check_correct(buffer, (checkbuf+1), 4);
-	check_correct((buffer+4), checkbuf, 1);
+	check_correct(buffer, (checkbuf + 1), 4);
+	check_correct((buffer + 4), checkbuf, 1);
 
 	complete();
 }
@@ -349,8 +349,53 @@ void test_rgbufread()
 #define test_info(str) \
 	cout << "CHECK: " << setw(50) << left << str;
 
+/*class TestRing*/
+/*{*/
+/*public:*/
+/*	TestRing();*/
+/*	virtual rgsize_t write(const void* src, rgsize_t n) = 0;*/
+/*	virtual rgsize_t read(void* dst, rgsize_t n) = 0;*/
+/*	virtual rgsize_t skip*/
+/*	virtual ~TestRing();*/
+/*};*/
+/**/
+struct __attribute__((packed)) asdf  {
+	uint8_t b : 6;
+	uint8_t a : 2;
+};
+
 int main(int argc, char* argv[])
 {
+	uint8_t buf[100000];
+	struct asdf* a;
+	int b = 0;
+	srand(0);
+	time_t t1, t2;
+	double sum_t = 0;
+	uint32_t c;
+	for (int i = 0; i < sizeof(buf); i++) {
+		buf[i] = rand() % 0xff;
+	}
+	for (int j = 0; j < 10000; j++) {
+		t1 = clock();
+		for (int i = 0; i < sizeof(buf); i++) {
+			/*a = (struct asdf*)(buf+i);*/
+			c = buf[i] >> 6;
+			/*if(a->a != c){*/
+			/*	printf("%u/%u != %u (%u)\n", a->a, a->b, c, buf[i]);*/
+			/*	return 0;*/
+			/*}*/
+			if (c > 0)
+				b++;
+		}
+		t2 = clock();
+		/*printf("%lf\n", (double)(t2-t1));*/
+		sum_t += (double)(t2 - t1);
+	}
+	sum_t /= 10000;
+	printf("clock = %lf\n", sum_t);
+	printf("b = %d\n", b);
+	return 0;
 	test_info("set index correct");
 	test_rgbase_index();
 	test_info("set pindex correct");
