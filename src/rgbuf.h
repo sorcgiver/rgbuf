@@ -7,7 +7,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct rgbuf rgbuf_t;
+typedef struct {
+	struct rgbase base;
+	rgindex_t idx_start;
+	rgsize_t szfill;
+} rgbuf_t;
 
 void rgbuf_init(rgbuf_t* fd, void* buf, rgsize_t size);
 void rgbuf_clear(rgbuf_t* fd);
@@ -17,13 +21,6 @@ rgsize_t rgbuf_read(rgbuf_t* fd, void* dst, rgsize_t n);
 rgsize_t rgbuf_peek(const rgbuf_t* fd, rgsize_t skip_n, void* dst, rgsize_t n);
 rgsize_t rgbuf_skip(rgbuf_t* fd, rgsize_t n);
 
-#ifdef PRIVATE_RGBUF
-struct rgbuf {
-	rgbase_t base;
-	rgindex_t idx_start;
-	rgsize_t szfill;
-};
-#endif /* PRIVATE_RGBUF */
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

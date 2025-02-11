@@ -1,7 +1,9 @@
 #define PRIVATE_RGBUF
 #define PRIVATE_RGBASE
+/*#define PRIVATE_RGPBUF*/
 #include "core/rgbase.h"
 #include "rgbuf.h"
+#include "rgpbuf.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -74,7 +76,7 @@ void test_prgbase_index()
 void test_pwrite()
 {
 	uint8_t buffer[5];
-	uint8_t checkbuf[5] = { 1, 2, 3, 4, 5 };
+	const uint8_t checkbuf[5] = { 1, 2, 3, 4, 5 };
 	struct rgbase fd;
 	rgbase_init(&fd, buffer, sizeof(buffer));
 
@@ -103,7 +105,7 @@ void test_pwrite()
 void test_write()
 {
 	uint8_t buffer[5];
-	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 	struct rgbase fd;
 	rgbase_init(&fd, buffer, sizeof(buffer));
 
@@ -137,7 +139,7 @@ void test_pread()
 {
 	uint8_t buffer[5];
 	uint8_t cpubuf[5];
-	uint8_t checkbuf[5] = { 1, 2, 3, 4, 5 };
+	const uint8_t checkbuf[5] = { 1, 2, 3, 4, 5 };
 	struct rgbase fd;
 	rgbase_init(&fd, buffer, sizeof(buffer));
 
@@ -166,7 +168,7 @@ void test_read()
 {
 	uint8_t buffer[5];
 	uint8_t cpubuf[5];
-	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 	struct rgbase fd;
 	rgbase_init(&fd, buffer, sizeof(buffer));
 
@@ -201,7 +203,7 @@ void test_rgbufwrite()
 {
 	rgsize_t size;
 	uint8_t buffer[5];
-	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 	rgbuf_t rb;
 	rgbuf_init(&rb, buffer, sizeof(buffer));
 
@@ -284,7 +286,7 @@ void test_rgbufwriteskip()
 {
 	rgsize_t size;
 	uint8_t buffer[5];
-	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 	rgbuf_t rb;
 	rgbuf_init(&rb, buffer, sizeof(buffer));
 
@@ -326,7 +328,7 @@ void test_rgbufread()
 	rgsize_t size;
 	uint8_t buffer[5];
 	uint8_t recvbuf[10];
-	uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 	rgbuf_t rb;
 	rgbuf_init(&rb, buffer, sizeof(buffer));
 
@@ -343,59 +345,109 @@ void test_rgbufread()
 	errval("not correct read size", size, 5);
 	check_correct(recvbuf, checkbuf, 5);
 
+	rgbuf_write(&rb, checkbuf, 10);
+	size = rgbuf_read(&rb, recvbuf, 1);
+	errval("not correct read size", size, 1);
+	check_correct(recvbuf, checkbuf, 1);
+	// next
+	size = rgbuf_read(&rb, recvbuf, 2);
+	errval("not correct read size", size, 2);
+	check_correct(recvbuf, (checkbuf+1), 2);
+	// next
+	size = rgbuf_read(&rb, recvbuf, 5);
+	errval("not correct read size", size, 2);
+	check_correct(recvbuf, (checkbuf+3), 2);
+	complete();
+}
+
+void test_rgbufoverwrite()
+{
+	rgsize_t size;
+	uint8_t buffer[5];
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	rgbuf_t rb;
+	rgbuf_init(&rb, buffer, sizeof(buffer));
+	memset(buffer, 0, sizeof(buffer));
+	
+	// default write
+	size = rgbuf_overwrite(&rb, checkbuf, 0);
+	errval("not correct write size", size, 0);
+
+	size = rgbuf_overwrite(&rb, checkbuf, 2);
+	errval("not correct write size", size, 2);
+	check_correct(buffer, checkbuf, 2);
+
+	size = rgbuf_overwrite(&rb, checkbuf, 3);
+	errval("not correct write size", size, 3);
+	check_correct((buffer+2), (checkbuf+0), 3);
+	check_correct((buffer+0), (checkbuf+0), 2);
+
+	// overwrite
+	size = rgbuf_overwrite(&rb, checkbuf, 3);
+	errval("not correct write size", size, 3);
+	errval("not correct fill size", rb.szfill, 5);
+	check_correct((buffer+3), (checkbuf+1), 2);
+	check_correct((buffer+0), (checkbuf+0), 3);
+
+	size = rgbuf_overwrite(&rb, checkbuf, 10);
+	errval("not correct write size", size, 5);
+	errval("not correct index", rb.idx_start, 3);
+	errval("not correct fill size", rb.szfill, 5);
+	check_correct((buffer+3), (checkbuf+0), 2);
+	check_correct((buffer+0), (checkbuf+2), 3);
+	complete();
+}
+
+void test_rgbufpeek()
+{
+	rgsize_t size;
+	uint8_t buffer[5];
+	uint8_t recvbuf[10];
+	const uint8_t checkbuf[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+	rgbuf_t rb;
+	rgbuf_init(&rb, buffer, sizeof(buffer));
+	memset(buffer, 0, sizeof(buffer));
+
+	size = rgbuf_peek(&rb, 0, recvbuf, 1);
+	errval("not correct peek size", size, 0);
+
+	rgbuf_write(&rb, checkbuf, 10);
+	// next
+	size = rgbuf_peek(&rb, 0, recvbuf, 2);
+	errval("not correct peek size", size, 2);
+	check_correct(recvbuf, checkbuf, 2);
+	// next
+	size = rgbuf_peek(&rb, 3, recvbuf, 2);
+	errval("not correct peek size", size, 2);
+	check_correct(recvbuf, (checkbuf+3), 2);
+	// next
+	size = rgbuf_peek(&rb, 4, recvbuf, 2);
+	errval("not correct peek size", size, 1);
+	check_correct(recvbuf, (checkbuf+4), 1);
+
+	rgbuf_skip(&rb, 2);
+	rgbuf_write(&rb, checkbuf, 10);
+	rgbuf_overwrite(&rb, checkbuf, 10);
+	// next
+	size = rgbuf_peek(&rb, 0, recvbuf, 2);
+	errval("not correct peek size", size, 2);
+	check_correct(recvbuf, (checkbuf+0), 2);
+	// next
+	size = rgbuf_peek(&rb, 3, recvbuf, 2);
+	errval("not correct peek size", size, 2);
+	check_correct(recvbuf, (checkbuf+3), 2);
+	// next
+	size = rgbuf_peek(&rb, 4, recvbuf, 2);
+	errval("not correct peek size", size, 1);
+	check_correct(recvbuf, (checkbuf+4), 1);
 	complete();
 }
 
 #define test_info(str) \
 	cout << "CHECK: " << setw(50) << left << str;
 
-/*class TestRing*/
-/*{*/
-/*public:*/
-/*	TestRing();*/
-/*	virtual rgsize_t write(const void* src, rgsize_t n) = 0;*/
-/*	virtual rgsize_t read(void* dst, rgsize_t n) = 0;*/
-/*	virtual rgsize_t skip*/
-/*	virtual ~TestRing();*/
-/*};*/
-/**/
-struct __attribute__((packed)) asdf  {
-	uint8_t b : 6;
-	uint8_t a : 2;
-};
-
 int main(int argc, char* argv[])
 {
-	uint8_t buf[100000];
-	struct asdf* a;
-	int b = 0;
-	srand(0);
-	time_t t1, t2;
-	double sum_t = 0;
-	uint32_t c;
-	for (int i = 0; i < sizeof(buf); i++) {
-		buf[i] = rand() % 0xff;
-	}
-	for (int j = 0; j < 10000; j++) {
-		t1 = clock();
-		for (int i = 0; i < sizeof(buf); i++) {
-			/*a = (struct asdf*)(buf+i);*/
-			c = buf[i] >> 6;
-			/*if(a->a != c){*/
-			/*	printf("%u/%u != %u (%u)\n", a->a, a->b, c, buf[i]);*/
-			/*	return 0;*/
-			/*}*/
-			if (c > 0)
-				b++;
-		}
-		t2 = clock();
-		/*printf("%lf\n", (double)(t2-t1));*/
-		sum_t += (double)(t2 - t1);
-	}
-	sum_t /= 10000;
-	printf("clock = %lf\n", sum_t);
-	printf("b = %d\n", b);
-	return 0;
 	test_info("set index correct");
 	test_rgbase_index();
 	test_info("set pindex correct");
@@ -414,5 +466,9 @@ int main(int argc, char* argv[])
 	test_rgbufwriteskip();
 	test_info("check rgbuf_t read");
 	test_rgbufread();
+	test_info("check rgbuf_t overwrite");
+	test_rgbufoverwrite();
+	test_info("check rgbuf_t peek");
+	test_rgbufpeek();
 	return 0;
 }

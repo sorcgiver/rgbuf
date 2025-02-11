@@ -1,4 +1,3 @@
-#define PRIVATE_RGBASE
 #include <string.h>
 #include "rgbase.h"
 

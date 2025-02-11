@@ -12,10 +12,10 @@ CXXFLAGS = -I$(RGPATH) -Wall -Wextra
 
 all: example test
 
-example: $(EXAMPLE_PATH)/example.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o
+example: $(EXAMPLE_PATH)/example.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o $(RGPATH)/rgpbuf.o
 	$(CXX) -o $@ $^
 
-test: $(TEST_PATH)/test.o $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o $(RGPATH)/rgpbuf.o
+test: $(RGCORE_PATH)/rgbase.o $(RGPATH)/rgbuf.o $(RGPATH)/rgpbuf.o $(TEST_PATH)/test.o
 	$(CXX) -o $@ $^
 
 $(TEST_PATH)/test.o: $(TEST_PATH)/test.cpp

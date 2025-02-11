@@ -33,12 +33,13 @@ rgsize_t rgbuf_overwrite(rgbuf_t* fd, const void* src, rgsize_t n)
 
 	if (n > fd->base.size)
 		n = fd->base.size;
-	if (szfree < n)
+	if (szfree < n) {
 		skip = n - szfree;
-	fd->szfill += n - skip;
-	fd->idx_start += n;
-	prgbase_idxcq(&fd->base, &fd->idx_start);
-	prgbase_write(&fd->base, fd->idx_start, src, n);
+		fd->szfill -= skip;
+		fd->idx_start += skip;
+		prgbase_idxcq(&fd->base, &fd->idx_start);
+	}
+	prgbase_write(&fd->base, fd->idx_start + fd->szfill, src, n);
 	fd->szfill += n;
 	return n;
 }
@@ -49,6 +50,8 @@ rgsize_t rgbuf_read(rgbuf_t* fd, void* dst, rgsize_t n)
 		n = fd->szfill;
 	prgbase_read(&fd->base, dst, fd->idx_start, n);
 	fd->szfill -= n;
+	fd->idx_start += n;
+	prgbase_idxcq(&fd->base, &fd->idx_start);
 	return n;
 }
 
@@ -57,13 +60,13 @@ rgsize_t rgbuf_peek(const rgbuf_t* fd, rgsize_t skip_n, void* dst, rgsize_t n)
 	rgindex_t idx_start;
 	rgsize_t szfill;
 
-	if(skip_n > fd->szfill)
+	if (skip_n > fd->szfill)
 		return 0;
 	szfill = fd->szfill - skip_n;
 	idx_start = fd->idx_start + skip_n;
 	prgbase_idxcq(&fd->base, &idx_start);
 
-	if(n > szfill)
+	if (n > szfill)
 		n = szfill;
 	prgbase_read(&fd->base, dst, idx_start, n);
 	return n;
