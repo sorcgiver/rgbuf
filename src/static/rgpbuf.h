@@ -1,8 +1,8 @@
 #ifndef RGPBUF_H
 #define RGPBUF_H
 
-#include <stdbool.h>
 #include "core/rgbase.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +34,10 @@ uint32_t rgpbuf_rsize32(rgpbuf_t* fd);
 uint64_t rgpbuf_rsize64(rgpbuf_t* fd);
 
 uint64_t rgpbuf_read64(rgpbuf_t* fd, void* dst);
+
+#ifdef PRIVATE_RGPBUF
+bool rgpbuf_szcalc64(rgpbuf_t* fd, rgp_type *type, uint64_t n);
+#endif /* PRIVATE_RGPBUF */
 
 /* ===== Format pack =====
  * type:2 - (2 bit) size type
