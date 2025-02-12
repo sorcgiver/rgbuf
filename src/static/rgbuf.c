@@ -2,6 +2,7 @@
 #define PRIVATE_RGBUF
 #include "rgbuf.h"
 #include "core/rgbase.h"
+#include <stdlib.h>
 
 void rgbuf_init(rgbuf_t* fd, void* buf, rgsize_t size)
 {
@@ -19,9 +20,12 @@ void rgbuf_clear(rgbuf_t* fd)
 rgsize_t rgbuf_write(rgbuf_t* fd, const void* src, rgsize_t n)
 {
 	rgsize_t szfree = fd->base.size - fd->szfill;
+	rgindex_t idx_end;
 	if (n > szfree)
 		n = szfree;
-	prgbase_write(&fd->base, fd->idx_start + fd->szfill, src, n);
+	idx_end = fd->idx_start + fd->szfill;
+	prgbase_idxcq(&fd->base, &idx_end);
+	prgbase_write(&fd->base, idx_end, src, n);
 	fd->szfill += n;
 	return n;
 }
@@ -29,17 +33,19 @@ rgsize_t rgbuf_write(rgbuf_t* fd, const void* src, rgsize_t n)
 rgsize_t rgbuf_overwrite(rgbuf_t* fd, const void* src, rgsize_t n)
 {
 	rgsize_t szfree = fd->base.size - fd->szfill;
-	rgsize_t skip = 0;
+	rgindex_t idx_end;
 
 	if (n > fd->base.size)
 		n = fd->base.size;
 	if (szfree < n) {
-		skip = n - szfree;
+		rgsize_t skip = n - szfree;
 		fd->szfill -= skip;
 		fd->idx_start += skip;
 		prgbase_idxcq(&fd->base, &fd->idx_start);
 	}
-	prgbase_write(&fd->base, fd->idx_start + fd->szfill, src, n);
+	idx_end = fd->idx_start + fd->szfill;
+	prgbase_idxcq(&fd->base, &idx_end);
+	prgbase_write(&fd->base, idx_end, src, n);
 	fd->szfill += n;
 	return n;
 }
