@@ -1,6 +1,3 @@
-#define PRIVATE_RGBUF
-#define PRIVATE_RGBASE
-/*#define PRIVATE_RGPBUF*/
 #include "core/rgbase.h"
 #include "rgbuf.h"
 #include "rgpbuf.h"
@@ -320,6 +317,19 @@ void test_rgbufwriteskip()
 	check_correct(buffer, (checkbuf + 1), 4);
 	check_correct((buffer + 4), checkbuf, 1);
 
+	rgbuf_clear(&rb);
+	memset(buffer, 0, sizeof(buffer));
+	size = rgbuf_write(&rb, checkbuf, sizeof(checkbuf));
+	errval("not correct write size", size, 5);
+	rgbuf_skip(&rb, 2);
+	size = rgbuf_write(&rb, checkbuf, 1);
+	errval("not correct write size", size, 1);
+	size = rgbuf_write(&rb, checkbuf, 10);
+	errval("not correct write size", size, 1);
+	check_correct((buffer+0), (checkbuf+0), 1);
+	check_correct((buffer+1), (checkbuf+0), 1);
+	check_correct((buffer+2), (checkbuf+2), 3);
+
 	complete();
 }
 
@@ -370,6 +380,21 @@ void test_rgbufoverwrite()
 	memset(buffer, 0, sizeof(buffer));
 	
 	// default write
+	rgbuf_clear(&rb);
+	memset(buffer, 0, sizeof(buffer));
+	size = rgbuf_overwrite(&rb, checkbuf, sizeof(checkbuf));
+	errval("not correct write size", size, 5);
+	rgbuf_skip(&rb, 2);
+	size = rgbuf_overwrite(&rb, checkbuf, 1);
+	errval("not correct write size", size, 1);
+	size = rgbuf_overwrite(&rb, checkbuf, 1);
+	errval("not correct write size", size, 1);
+	check_correct((buffer+0), (checkbuf+0), 1);
+	check_correct((buffer+1), (checkbuf+0), 1);
+	check_correct((buffer+2), (checkbuf+2), 3);
+
+	rgbuf_clear(&rb);
+	memset(buffer, 0, sizeof(buffer));
 	size = rgbuf_overwrite(&rb, checkbuf, 0);
 	errval("not correct write size", size, 0);
 
@@ -381,6 +406,7 @@ void test_rgbufoverwrite()
 	errval("not correct write size", size, 3);
 	check_correct((buffer+2), (checkbuf+0), 3);
 	check_correct((buffer+0), (checkbuf+0), 2);
+
 
 	// overwrite
 	size = rgbuf_overwrite(&rb, checkbuf, 3);
