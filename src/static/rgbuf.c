@@ -66,7 +66,7 @@ rgsize_t rgbuf_peek(const rgbuf_t* fd, rgsize_t skip_n, void* dst, rgsize_t n)
 	rgindex_t idx_start;
 	rgsize_t szfill;
 
-	if (skip_n > fd->szfill)
+	if (skip_n >= fd->szfill)
 		return 0;
 	szfill = fd->szfill - skip_n;
 	idx_start = fd->idx_start + skip_n;
